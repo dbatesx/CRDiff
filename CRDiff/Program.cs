@@ -31,69 +31,16 @@ namespace CRDiff
      * 
      * Task list: 
      * - 
+     * 
+     * Testing arguments:
+     * "C:\Program Files (x86)\Compare It!\wincmp3.exe" "C:\dev\svn\Reports\Crystal Reports\trunk\KinderMorgan_CS_MT_Testing.rpt" "C:\dev\svn\Reports\Crystal Reports\trunk\KinderMorgan_CS_MT.rpt"
+     * "C:\dev\svn\Reports\Crystal Reports\trunk\KinderMorgan_CS_MT_Testing.rpt" KM_CS_MT_Testing.json
      */
     class Program
     {
-        //public class Options
-        //{
-        //    [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
-        //    public bool Verbose { get; set; }
-        //    [Option('x', "xml", Required = false, HelpText = "Set output format to XML.")]
-        //    public bool Xml { get; set; }
-        //    [Option('d', "diff", Required = false, HelpText = "Set text diff tool")]
-        //    public string TextDiffTool { get; set; }
-        //}
-
-        //public enum OutputFormat
-        //{
-        //    json,
-        //    xml
-        //}
 
         static void Main(string[] args)
         {
-            //bool isJson = true;
-            //bool isXml = false;
-
-            //Parser.Default.ParseArguments<Options>(args)
-            //    .WithParsed<Options>(o =>
-            //    {
-            //        if (o.Verbose)
-            //        {
-            //            Console.WriteLine($"Verbose output enabled. Current Arguments: -v {o.Verbose}");
-            //            Console.WriteLine("Quick Start Example! App is in Verbose mode!");
-            //        }
-            //        if (o.Xml)
-            //        {
-            //            isJson = false;
-            //            isXml = true;
-            //        }
-            //        if (!string.IsNullOrEmpty(o.TextDiffTool))
-            //        {
-            //            Console.WriteLine($"You want to use {o.TextDiffTool}");
-            //        }
-            //    });
-
-
-            //var report1 = new ReportDocument();
-
-            //string report1Path = args[0];
-            //string report2Path = args.Count() > 1 ? args[1] : "";
-
-            
-
-            //if (!File.Exists(report1Path))
-            //{
-            //    Console.WriteLine($"Can't seem to find {report1Path}");
-            //    return;
-            //}
-            //if (Path.GetExtension(report1Path) != ".rpt")
-            //{
-            //    // TODO Pass filepath1 and filepath2 to textDiffTool if filepath2 is also not a report file
-            //    Console.WriteLine($"{report1Path} isn't a report file");
-            //    return;
-            //}
-
             switch (args.Length)
             {
                 case 1:
@@ -105,7 +52,7 @@ namespace CRDiff
                         }
                         else
                         {
-
+                            Console.WriteLine(string.Join(" ", args));
                             Console.WriteLine("Not a report file");
                             Usage();
                         }
@@ -116,12 +63,17 @@ namespace CRDiff
                         // Assumption is that the diff tool calls with the report file to convert 
                         // and a temp filepath which it will clean up when done.
                         if (Path.GetExtension(args[0]) == ".rpt"
-                            && !File.Exists(args[1]))
+                            && File.Exists(args[0]))
                         {
+                            //Console.WriteLine($"Creating \"{args[1]}\" from \"{args[0]}\"");
                             SerializeToFile(args[0], args[1]);
                         }
                         else
+                        {
+                            Console.WriteLine($"Create \"{args[1]}\" from \"{args[0]}\"?");
+                            Console.WriteLine(string.Join(" ", args));
                             Usage();
+                        }
                         break;
                     }
                 case 3:
@@ -140,6 +92,7 @@ namespace CRDiff
                             || !File.Exists(rptFile1)
                             || !File.Exists(rptFile2))
                         {
+                            Console.WriteLine(string.Join(" ", args));
                             Usage();
                             return;
                         }
@@ -149,7 +102,7 @@ namespace CRDiff
                             if (Path.GetExtension(rptFile1) == ".rpt")
                             {
                                 file1IsRpt = true;
-                                textFile1 = SerializeToFile(rptFile1);
+                                textFile1 = SerializeToFile(rptFile1, reportOrder: 1);
                             }
                             else
                             {
@@ -159,7 +112,7 @@ namespace CRDiff
                             if (Path.GetExtension(rptFile2) == ".rpt")
                             {
                                 file2IsRpt = true;
-                                textFile2 = SerializeToFile(rptFile2);
+                                textFile2 = SerializeToFile(rptFile2, reportOrder: 2);
                             }
                             else
                             {
@@ -198,90 +151,17 @@ namespace CRDiff
                     }
             }
 
-            //var filesToCompare = new List<DiffFile>();
-            //try
-            //{
-
-            //foreach(var arg in args)
-            //{
-            //    if (arg == textDiffTool)
-            //        continue;
-
-            //    if (File.Exists(arg))
-            //    {
-            //        var diffFile = new DiffFile() { Path = arg };
-
-            //        if (Path.GetExtension(arg) == ".rpt")
-            //        {
-            //            var rpt = new ReportDocument();
-            //            diffFile.NewPath = Path.ChangeExtension(arg, "json");
-            //            var file = File.CreateText(diffFile.NewPath);
-            //            Console.WriteLine($"Loading {arg}");
-            //            rpt.Load(arg);
-
-            //            Console.WriteLine($"Saving {diffFile.NewPath}");
-            //            diffFile.Serialized = Serialize(rpt, diffFile.NewPath);
-            //            file.Write(diffFile.Serialized);
-            //            file.Flush();
-            //            file.Close();
-            //            rpt.Close();
-            //        }
-
-            //        filesToCompare.Add(diffFile);
-            //    }
-            //}
-            //}
-            //catch (Exception ex)
-            //{
-
-            //    Console.WriteLine($"Error: {ex.Message} {ex.InnerException.Message}");
-            //    var key = Console.ReadKey();
-            //}
-            //if (filesToCompare.Count() == 1)
-            //{
-            //    // output serialized file only
-            //    Console.WriteLine("Blimey!");
-            //    return;// filesToCompare.First();
-            //}
-            //else if (filesToCompare.Count() == 2)
-            //{
-            //    var diffParams = $"\"{filesToCompare[0].NewPath ?? filesToCompare[0].Path}\" \"{filesToCompare[1].NewPath ?? filesToCompare[1].Path}\"";
-            //    Console.Write($"Starting \"{ textDiffTool}\" {diffParams}");
-
-            //    var diffProc = Process.Start(
-            //        textDiffTool, 
-            //        diffParams
-            //        );
-
-            //    diffProc.WaitForExit();
-
-            //    // Clean up (delete) temp files after text diff tool is finished with them
-            //    foreach(var file in filesToCompare)
-            //    {
-            //        if (File.Exists(file.NewPath))
-            //        {
-            //            // TODO: Only if it was a temp file!
-            //            File.Delete(file.NewPath);
-            //        }
-            //    }
-
-            //    return;
-            //}
-            //else
-            //{
-            //    return;// "Eh?";
-            //}
         }
 
-        static void Usage()
+        static void Usage(string[] args = null)
         {
             Console.WriteLine("CRDiff PathToReport");
             Console.WriteLine("CRDiff PathToReport TargetFilename");
             Console.WriteLine("CRDiff PathToTextDiffApp PathToReport1 PathToReport2");
-            Console.ReadKey();
+            //Console.ReadKey();
         }
 
-        static string SerializeToFile(string rptPath, string textPath = null)
+        static string SerializeToFile(string rptPath, string textPath = null, int reportOrder = 1)
         {
             var rpt = new ReportDocument();
 
@@ -291,18 +171,18 @@ namespace CRDiff
             rpt.Load(rptPath);
 
             Console.WriteLine($"Saving {textPath}");
-            var serialized = Serialize(rpt, textPath);
+            var serialized = Serialize(rpt, textPath, reportOrder);
             file.Write(serialized);
             file.Flush();
             file.Close();
             rpt.Close();
             return textPath;
         }
-        static string Serialize(ReportDocument rpt, string filepath)//, OutputFormat fmt = OutputFormat.json)
+        static string Serialize(ReportDocument rpt, string filepath, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
         {
             var settings = new JsonSerializerSettings
             {
-                ContractResolver = new CustomResolver(),
+                ContractResolver = new CustomJsonResolver(),
                 Formatting = Formatting.Indented
             };
 
@@ -312,6 +192,21 @@ namespace CRDiff
 
             var reportTables = rpt.ReportClientDocument.DatabaseController.Database.Tables;
             var commandSqlList = new StringBuilder();
+            var sw = new StringWriter();
+
+            // TODO: Write property names and values with JsonWriter:
+            //using (JsonWriter jw = new JsonTextWriter(sw))
+            //{
+            //    jw.WriteStartObject();
+
+            //    jw.WritePropertyName("CrystalReports.CommandTable");
+            //    jw.WritePropertyName("ReportName");
+            //    jw.WriteValue(rptName);
+            //    jw.WriteEndObject();
+
+            //    commandSqlList.Append(jw);
+            //}
+            
             foreach (dynamic table in reportTables)
             {
                 if (table.ClassName == "CrystalReports.CommandTable")
@@ -321,21 +216,30 @@ namespace CRDiff
                     commandSqlList.Append("\"]\n  }\n");
                 }
             }
-
+            // TODO: Need to show element suppression formulas (and other formulas for elements)
+            // TODO: Need to show sub-textbox formatting (ie font changes, tab settings, etc)
             var txt = new StringBuilder();
             txt.AppendLine("{\"Report\":\n  {\"CommandSQL\":");
             txt.Append(commandSqlList);
             txt.AppendLine("},");
             txt.AppendLine("{\"DatabaseTables\":");
             txt.AppendLine(JsonConvert.SerializeObject(rpt.ReportClientDocument.DatabaseController.Database.Tables, settings));
+            //if(reportOrder == 1)
+            //{
+            //    txt.AppendLine(JsonConvert.SerializeObject(rpt.Database, settings));
+            //    txt.AppendLine(JsonConvert.SerializeObject(rpt.DataSourceConnections, settings));
+            //    txt.AppendLine(JsonConvert.SerializeObject(rpt.Subreports, settings));
+
+            //}
             txt.AppendLine("},");
             txt.AppendLine("{\"DataDefinition\":");
             txt.AppendLine(JsonConvert.SerializeObject(rpt.DataDefinition, settings));
             txt.AppendLine("},");
             txt.AppendLine("{\"ReportDefinition\":");
             txt.AppendLine(JsonConvert.SerializeObject(rpt.ReportDefinition, settings));
+            // TODO: Add PageSetup info such as margins
             txt.AppendLine("  }\n}");
-
+            
             return txt.ToString();
         }
 
@@ -350,37 +254,4 @@ namespace CRDiff
             return paramtrs;
         }
     }
-    class CustomResolver : DefaultContractResolver
-    {
-        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-        {
-            JsonProperty property = base.CreateProperty(member, memberSerialization);
-
-            property.ShouldSerialize = instance =>
-            {
-                try
-                {
-                    PropertyInfo prop = (PropertyInfo)member;
-                    if (prop.CanRead)
-                    {
-                        prop.GetValue(instance, null);
-                        return true;
-                    }
-                }
-                catch (Exception)
-                {
-                }
-                return false;
-            };
-            return property;
-        }
-    }
-
-    //class DiffFile
-    //{
-    //    public string Path { get; set; }
-    //    public string NewPath { get; set; }
-    //    public string Serialized { get; set; }
-    //    public string Destination { get; set; }
-    //}
 }
