@@ -141,5 +141,11 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CRSerializer\CRSerializer.csproj">
+      <Project>{612827CE-316D-40E7-9082-CB0A7B9BE047}</Project>
+      <Name>CRSerializer</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
