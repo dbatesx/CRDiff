@@ -162,6 +162,7 @@ namespace CRDiff
         private static string SerializeToFile(string rptPath, string textPath = null, int reportOrder = 1)
         {
             var rpt = new ReportDocument();
+
             var serializer = new CRSerialize();
 
             textPath = textPath ?? Path.ChangeExtension(rptPath, "json");
