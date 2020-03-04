@@ -139,13 +139,14 @@ namespace CRDiff
                         catch (Exception ex)
                         {
                             Console.WriteLine($"Error: {ex.Message} {ex.InnerException?.Message}");
-                            var key = Console.ReadKey();
+                            ReadKey();
                         }
                         break;
                     }
                 default:
                     {
                         Usage();
+                        ReadKey();
                         break;
                     }
             }
@@ -153,10 +154,23 @@ namespace CRDiff
 
         private static void Usage(string[] args = null)
         {
-            Console.WriteLine("CRDiff PathToReport");
-            Console.WriteLine("CRDiff PathToReport TargetFilename");
-            Console.WriteLine("CRDiff PathToTextDiffApp PathToReport1 PathToReport2");
-            //Console.ReadKey();
+            Console.WriteLine("Usage:");
+            Console.WriteLine("CRDiff PathToReport (Create a serialized .json file of the report)");
+            Console.WriteLine("CRDiff PathToReport TargetFilename (Use CRDiff as a converter in many text diff tools)");
+            Console.WriteLine("CRDiff PathToTextDiffApp PathToReport1 PathToReport2 (Configure SC Diff Viewer for .rpt files)");
+        }
+
+        private static void Instructions()
+        {
+            Console.WriteLine(@"
+
+");
+        }
+
+        private static void ReadKey()
+        {
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
 
         private static string SerializeToFile(string rptPath, string textPath = null, int reportOrder = 1)

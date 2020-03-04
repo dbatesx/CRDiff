@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace CRSerializer
 {
@@ -25,110 +26,99 @@ namespace CRSerializer
             var sb = new StringBuilder();
             var sw = new StringWriter(sb);
 
-            // TODO: Write property names and values with JsonWriter:
             using (JsonWriter jw = new JsonTextWriter(sw))
             {
                 jw.Formatting = Formatting.Indented;
-                //jw.
 
                 jw.WriteStartObject();
 
-                //jw.WritePropertyName("CrystalReports.CommandTable");
-                jw.WritePropertyName("ReportPropertyName");
+                jw.WritePropertyName("ReportName");
                 jw.WriteValue(rptName);
-                jw.WriteEndObject();
+                jw.WritePropertyName("DataSource");
+                GetDataSource(jw, rptClient.Database.Tables);
+                jw.WritePropertyName("DatabaseTables");
+                jw.WriteRawValue(JsonConvert.SerializeObject(rptClient.Database.Tables, jsonSerializerSettings));
+                jw.WritePropertyName("DataDefinition");
+                jw.WriteRawValue(JsonConvert.SerializeObject(rpt.DataDefinition, jsonSerializerSettings));
+                jw.WritePropertyName("ReportDefinition");
+                jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition, jsonSerializerSettings));
+                //jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition.ReportObjects, jsonSerializerSettings));
 
-                //commandSqlList.Append(jw.);
-                GetTables(jw, rptClient.Database.Tables);
 
-                //var subReports = rpt.Subreports;
-                //foreach (ReportDocument subReport in subReports)
-                //{
-                //    CommandTable(jw, subReport.Database.Tables);
-                //    //subReport.Database.Tables;
-
-                //}
-
-                var subReportNames = rptClient.SubreportController.GetSubreportNames();
-                foreach (string subreportName in subReportNames)
+                jw.WritePropertyName("Subreports");
+                var subReports = rpt.Subreports;
+                if (subReports.Count > 0)
                 {
-                    var subReport = rptClient.SubreportController.GetSubreport(subreportName);
-                    GetTables(jw, subReport.DataDefController.Database.Tables);
+                    jw.WriteStartArray();
+                    foreach (ReportDocument subReport in subReports)
+                    {
+                        var subReportClient = rptClient.SubreportController.GetSubreport(subReport.Name);
+
+                        jw.WriteStartObject();
+                        jw.WritePropertyName("SubreportName");
+                        jw.WriteValue(subReport.Name);
+                        jw.WritePropertyName("DataSource");
+                        GetDataSource(jw, subReportClient.DataDefController.Database.Tables);
+                        jw.WritePropertyName("DatabaseTables");
+                        //WriteObject(jw, subReport.Database.Tables);
+                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.Database.Tables, jsonSerializerSettings));
+                        jw.WritePropertyName("DataDefinition");
+                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.DataDefinition, jsonSerializerSettings));
+                        jw.WritePropertyName("ReportDefinition");
+                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.ReportDefinition, jsonSerializerSettings));
+                        jw.WriteEndObject();
+                    }
                 }
 
-                //foreach (dynamic table in reportTables)
-                //{
-                //    if (table.ClassName == "CrystalReports.CommandTable")
-                //    {
-                //        commandSqlList.Append($"    {{\"ReportName\": \"{rptName}\", \n      \"Command\": [\n\"");
-                //        commandSqlList.Append(table.CommandText.Replace("\r\n", "\", \n\""));
-                //        commandSqlList.Append("\"]\n  }\n");
-                //    }
-                //}
+                jw.WriteEndObject(); // final end
 
-                var txt = new StringBuilder();
-                txt.AppendLine("{\"Report\":\n  {\"CommandSQL\":");
-                txt.Append(sb);
-                txt.AppendLine("},");
-                txt.AppendLine("{\"DatabaseTables\":");
-                txt.AppendLine(JsonConvert.SerializeObject(rpt.ReportClientDocument.DatabaseController.Database.Tables, jsonSerializerSettings));
-                //if(reportOrder == 1)
-                //{
-                //    txt.AppendLine(JsonConvert.SerializeObject(rpt.Database, settings));
-                //    txt.AppendLine(JsonConvert.SerializeObject(rpt.DataSourceConnections, settings));
-                //    txt.AppendLine(JsonConvert.SerializeObject(rpt.Subreports, settings));
-
-                //}
-                txt.AppendLine("},");
-                txt.AppendLine("{\"DataDefinition\":");
-                txt.AppendLine(JsonConvert.SerializeObject(rpt.DataDefinition, jsonSerializerSettings));
-                txt.AppendLine("},");
-                txt.AppendLine("{\"ReportDefinition\":");
-                txt.AppendLine(JsonConvert.SerializeObject(rpt.ReportDefinition.Areas, jsonSerializerSettings));
-                txt.AppendLine(JsonConvert.SerializeObject(rpt.ReportDefinition.ReportObjects, jsonSerializerSettings));
-                // TODO: Add PageSetup info such as margins
-                txt.AppendLine("  }\n}");
-
-                return txt.ToString();
+                return sb.ToString();
             }
         }
 
-        private void CommandTable(JsonWriter w, CrystalDecisions.CrystalReports.Engine.Tables tables)
+        private void WriteObject(JsonWriter jw, object obj)
         {
+            var jsonSerializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CustomJsonResolver(),
+                Formatting = Formatting.Indented
+            };
+            jw.WriteRawValue(JsonConvert.SerializeObject(obj, jsonSerializerSettings));
+
+        }
+        private void GetDataSource(JsonWriter jw, CrystalDecisions.ReportAppServer.DataDefModel.Tables tables)
+        {
+            //Doesn't deal with a mix of command statements and tables (but that scenario is rare)
+            var isFirstTable = true;
+
+            jw.WriteStartObject();
             foreach (dynamic table in tables)
             {
                 if (table.ClassName == "CrystalReports.CommandTable")
                 {
-                    w.WriteStartObject();
-                    w.WritePropertyName("Command");
-                    MultiLinesToArray(w, table.CommandText);
-                    w.WriteEndObject();
-                }
-            }
-        }
-
-        private void GetTables(JsonWriter w, CrystalDecisions.ReportAppServer.DataDefModel.Tables tables)
-        {
-            foreach (dynamic table in tables)
-            {
-                w.WriteStartObject();
-                if (table.ClassName == "CrystalReports.CommandTable")
-                {
-                    w.WritePropertyName("Command");
-                    MultiLinesToArray(w, table.CommandText);
+                    jw.WritePropertyName("Command");
+                    MultiLinesToArray(jw, table.CommandText);
                 }
                 else
                 {
-                    w.WritePropertyName("Table");
-                    w.WriteValue(table.Name);
+                    if (isFirstTable)
+                    {
+                        jw.WritePropertyName("Tables");
+                        jw.WriteStartArray();
+                        isFirstTable = false;
+                    }
+                    jw.WriteValue(table.Name);
                 }
-                w.WriteEndObject();
             }
+            if (!isFirstTable)
+            {
+                jw.WriteEndArray();
+            }
+            jw.WriteEndObject();
         }
 
         private void MultiLinesToArray(JsonWriter w, string str)
         {
-            //string[] lineEnd = { "\r\n", "\n" };
             string[] vs = str.Split(new[] { "\r\n", "\n" }, System.StringSplitOptions.None);
             w.WriteStartArray();
             foreach (var s in vs)
@@ -136,67 +126,6 @@ namespace CRSerializer
                 w.WriteValue(s);
             }
             w.WriteEnd();
-        }
-
-        private string getSQL(string rptName)
-        {
-            CrystalDecisions.CrystalReports.Engine.ReportDocument rpt = new CrystalDecisions.CrystalReports.Engine.ReportDocument();
-            CrystalDecisions.ReportAppServer.ClientDoc.ISCDReportClientDocument rptClient;
-            CrystalDecisions.ReportAppServer.Controllers.DataDefController dataDefController;
-            CrystalDecisions.ReportAppServer.DataDefModel.Database boDatabase;
-            CrystalDecisions.ReportAppServer.DataDefModel.CommandTable cmdTable;
-
-            // Load the report using the CR .NET SDK and get a handle on the ReportClientDocument
-            //boReportDocument.Load(iObject, eSession);
-            rpt.Load(rptName);
-            rptClient = rpt.ReportClientDocument;
-
-            // Use the DataDefController to access the database and the command table.
-            // Then display the current command table SQL in the textbox.
-            dataDefController = rptClient.DataDefController;
-            boDatabase = dataDefController.Database;
-
-            string sql = "";
-
-            for (int i = 0; i < boDatabase.Tables.Count; i++)
-            {
-                CrystalDecisions.ReportAppServer.DataDefModel.ISCRTable tableObject = boDatabase.Tables[i];
-
-                if (tableObject.ClassName == "CrystalReports.Table")
-                {
-                    sql = sql + "Table " + i + ": " + tableObject.Name;
-                }
-                else
-                {
-                    cmdTable = (CrystalDecisions.ReportAppServer.DataDefModel.CommandTable)boDatabase.Tables[i];
-                    sql = sql + "Query " + i + ": " + cmdTable.CommandText;
-                }
-                sql += Environment.NewLine;
-            }
-
-            foreach (string subName in rptClient.SubreportController.GetSubreportNames())
-            {
-                CrystalDecisions.ReportAppServer.Controllers.SubreportClientDocument subRCD = rptClient.SubreportController.GetSubreport(subName);
-
-                for (int i = 0; i < boDatabase.Tables.Count; i++)
-                {
-                    CrystalDecisions.ReportAppServer.DataDefModel.ISCRTable tableObject = boDatabase.Tables[i];
-
-                    if (tableObject.ClassName == "CrystalReports.Table")
-                    {
-                        sql = sql + "Table " + i + ": " + tableObject.Name;
-                    }
-                    else
-                    {
-                        cmdTable = (CrystalDecisions.ReportAppServer.DataDefModel.CommandTable)subRCD.DatabaseController.Database.Tables[i];
-                        sql = sql + "Subreport " + subName + " - Query " + i + ": " + cmdTable.CommandText;
-                    }
-                    sql += Environment.NewLine;
-                }
-            }
-
-            // Clean up
-            return sql;
         }
     }
 }
