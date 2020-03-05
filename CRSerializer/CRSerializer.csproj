@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="CRSerialize.cs" />
     <Compile Include="CustomJsonResolver.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

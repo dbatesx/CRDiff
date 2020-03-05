@@ -34,14 +34,18 @@ namespace CRSerializer
 
                 jw.WritePropertyName("ReportName");
                 jw.WriteValue(rptName);
+
                 jw.WritePropertyName("DataSource");
-                GetDataSource(jw, rptClient.Database.Tables);
+                jw.WriteDataSource(rptClient.Database.Tables);
+
                 jw.WritePropertyName("DatabaseTables");
-                jw.WriteRawValue(JsonConvert.SerializeObject(rptClient.Database.Tables, jsonSerializerSettings));
+                jw.WriteObjectHierarchy(rptClient.Database.Tables);
+
                 jw.WritePropertyName("DataDefinition");
-                jw.WriteRawValue(JsonConvert.SerializeObject(rpt.DataDefinition, jsonSerializerSettings));
+                jw.WriteObjectHierarchy(rpt.DataDefinition);
+
                 jw.WritePropertyName("ReportDefinition");
-                jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition, jsonSerializerSettings));
+                jw.WriteObjectHierarchy(rpt.ReportDefinition);
                 //jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition.ReportObjects, jsonSerializerSettings));
 
 
@@ -57,15 +61,19 @@ namespace CRSerializer
                         jw.WriteStartObject();
                         jw.WritePropertyName("SubreportName");
                         jw.WriteValue(subReport.Name);
+
                         jw.WritePropertyName("DataSource");
-                        GetDataSource(jw, subReportClient.DataDefController.Database.Tables);
+                        jw.WriteDataSource(subReportClient.DataDefController.Database.Tables);
+
                         jw.WritePropertyName("DatabaseTables");
-                        //WriteObject(jw, subReport.Database.Tables);
-                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.Database.Tables, jsonSerializerSettings));
+                        jw.WriteObjectHierarchy(subReport.Database.Tables);
+
                         jw.WritePropertyName("DataDefinition");
-                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.DataDefinition, jsonSerializerSettings));
+                        jw.WriteObjectHierarchy(subReport.DataDefinition);
+                        
                         jw.WritePropertyName("ReportDefinition");
-                        jw.WriteRawValue(JsonConvert.SerializeObject(subReport.ReportDefinition, jsonSerializerSettings));
+                        jw.WriteObjectHierarchy(subReport.ReportDefinition);
+                        
                         jw.WriteEndObject();
                     }
                 }
@@ -74,58 +82,6 @@ namespace CRSerializer
 
                 return sb.ToString();
             }
-        }
-
-        private void WriteObject(JsonWriter jw, object obj)
-        {
-            var jsonSerializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new CustomJsonResolver(),
-                Formatting = Formatting.Indented
-            };
-            jw.WriteRawValue(JsonConvert.SerializeObject(obj, jsonSerializerSettings));
-
-        }
-        private void GetDataSource(JsonWriter jw, CrystalDecisions.ReportAppServer.DataDefModel.Tables tables)
-        {
-            //Doesn't deal with a mix of command statements and tables (but that scenario is rare)
-            var isFirstTable = true;
-
-            jw.WriteStartObject();
-            foreach (dynamic table in tables)
-            {
-                if (table.ClassName == "CrystalReports.CommandTable")
-                {
-                    jw.WritePropertyName("Command");
-                    MultiLinesToArray(jw, table.CommandText);
-                }
-                else
-                {
-                    if (isFirstTable)
-                    {
-                        jw.WritePropertyName("Tables");
-                        jw.WriteStartArray();
-                        isFirstTable = false;
-                    }
-                    jw.WriteValue(table.Name);
-                }
-            }
-            if (!isFirstTable)
-            {
-                jw.WriteEndArray();
-            }
-            jw.WriteEndObject();
-        }
-
-        private void MultiLinesToArray(JsonWriter w, string str)
-        {
-            string[] vs = str.Split(new[] { "\r\n", "\n" }, System.StringSplitOptions.None);
-            w.WriteStartArray();
-            foreach (var s in vs)
-            {
-                w.WriteValue(s);
-            }
-            w.WriteEnd();
         }
     }
 }
