@@ -9,6 +9,16 @@ namespace CRSerializer
 {
     public class CRSerialize
     {
+        public string Serialize(string rptPath, string filepath, int reportOrder = 1)
+        {
+            var rpt = new ReportDocument();
+            rpt.Load(rptPath);
+            var serialization = Serialize(rpt, filepath, reportOrder);
+            rpt.Close();
+            return serialization;
+
+        }
+
         public string Serialize(ReportDocument rpt, string filepath, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
         {
             var rptClient = rpt.ReportClientDocument;

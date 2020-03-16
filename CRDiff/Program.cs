@@ -1,7 +1,7 @@
 ﻿using CRSerializer;
-using CrystalDecisions.CrystalReports.Engine;
+//using CrystalDecisions.CrystalReports.Engine;
 using System;
-using System.Collections.Generic;
+//using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -175,33 +175,20 @@ namespace CRDiff
 
         private static string SerializeToFile(string rptPath, string textPath = null, int reportOrder = 1)
         {
-            var rpt = new ReportDocument();
 
             var serializer = new CRSerialize();
 
             textPath = textPath ?? Path.ChangeExtension(rptPath, "json");
             var file = File.CreateText(textPath);
             Console.WriteLine($"Loading {rptPath}");
-            rpt.Load(rptPath);
 
             Console.WriteLine($"Saving {textPath}");
-            var serialized = serializer.Serialize(rpt, textPath, reportOrder);
+            var serialized = serializer.Serialize(rptPath, textPath, reportOrder);
             file.Write(serialized);
             file.Flush();
             file.Close();
-            rpt.Close();
             return textPath;
         }
 
-        private static List<string> Parameters(ReportDocument rpt)
-        {
-            var paramtrs = new List<string>();
-            var parameters = rpt.DataDefinition.ParameterFields;
-            foreach (ParameterFieldDefinition param in parameters)
-            {
-                paramtrs.Add($"Parameter {param.ReportName}.{param.Name}");
-            }
-            return paramtrs;
-        }
     }
 }

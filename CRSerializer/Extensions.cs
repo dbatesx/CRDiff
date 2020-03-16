@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CrystalDecisions.CrystalReports.Engine;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,6 +60,17 @@ namespace CRSerializer
                 jw.WriteValue(s);
             }
             jw.WriteEnd();
+        }
+
+        private static List<string> Parameters(ReportDocument rpt)
+        {
+            var paramtrs = new List<string>();
+            var parameters = rpt.DataDefinition.ParameterFields;
+            foreach (ParameterFieldDefinition param in parameters)
+            {
+                paramtrs.Add($"Parameter {param.ReportName}.{param.Name}");
+            }
+            return paramtrs;
         }
 
     }
