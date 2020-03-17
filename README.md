@@ -32,3 +32,23 @@ Open CompareIt!, open Tools/Options, and select Converters. Press "Add", and spe
 In Tools, File Formats..., press "+" and select Text Format. In the General tab, specify Mask: "\*.rpt". In the Conversion tab, specify "External program (Unicode filenames)", Loading: "\<CRDiff path\>CRDiff.exe %s %t", check Disable editing, then Save.
 ## TortoiseGit
 In Settings, Diff Viewer, click Advanced, Add..., and specify Extension: ".rpt", External Program: "\<CRDiff path\>CRDiff.exe \<path to your text compare tool\>  %base %mine"
+## Others
+TBA
+
+# Features
+- Checks file extension, and if it is not .rpt, file passes directly to text diff tool.
+- Serialize many of the report details we want to be able to compare into a text file, like
+  * Command query
+  * element dimensions and settings
+  * subreports
+- Save serialized files and pass to a text diff tool
+- Clean-up (delete) temp files after text diff tool is closed.
+
+# Still to Implement 
+- Need to output
+  - element suppression formulas (and other formulas for elements)
+  - sub-textbox formatting (ie font changes, coloring, tab settings, etc)
+  - "Lock Position"
+  - "change number sign"
+  - Page Setup (ie Printer, margins)
+  - "Keep Data" setting
