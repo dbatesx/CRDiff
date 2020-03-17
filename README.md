@@ -10,7 +10,7 @@ You may get a message "Are you sure you want to run this software?"
 * Uncheck "Always ask before opening this file" and 
 * press "Run"
 
-If when CRDiff.exe is run you don't see a valid CR Version displayed, you may need to install the Crystal Reports Runtime, in the Crystal Reports Runtime folder.
+If when CRDiff.exe is run with no parameters, you don't see a valid CR Version displayed, you may need to install the Crystal Reports Runtime, available in the Crystal Reports Runtime folder.
 
 # Usage: 
   - CRDiff.exe DiffAppPath ReportFilename1 ReportFilename2
