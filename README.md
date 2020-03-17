@@ -2,7 +2,7 @@
 CRDiff is a program that can serialize the binary Crystal reports .rpt files to human readable .json files, and works in conjunction with your text diff tool. If your tool is configurable to use file transforms, it works even better.
 
 # Installation
-The published location is \\aus2-odx-dfs01.pdsenergy.local\devTools\CRDiff\
+The published location is \\\\aus2-odx-dfs01.pdsenergy.local\\devTools\\CRDiff
 Copy the contents to the local folder of your choice (<CRDiff Path>) - Having that folder in your path is helpful.
 
 You may get a message "Are you sure you want to run this software?" 
