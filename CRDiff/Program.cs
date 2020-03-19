@@ -8,23 +8,26 @@ using System.IO;
 namespace CRDiff
 {
     /* Features:
-     * - Integratable with Github (as well as subversion and stand-alone)
+     * - Integratable with TortoiseGit (as well as subversion and stand-alone)
      * - Checks file extension, and if it is not .rpt, file passes directly to text diff tool.
      * - When a report, opens it/them. If error, output message
      * - Serialize all the report details into a text file we want to be able to compare, like
      *      Command query
      *      element dimensions and settings
      *      subreports
-     * - Serialization can be into either xml or json (command line switch -x[ml] or -j[son]
      * - Save serialized files and pass to the text diff tool
      * - Clean-up (delete) temp files after text diff tool is closed.
      *
      * Road Map:
+     * - Add command-line switches such as /d[ifftool], /1[stReport], /2[ndReport], /t[empOutput]
+     * - Add configuration (either in registry or app.config)
      * - Hook into shell context menu to select report files to diff.
+     * - Serialization can be into either xml or json (command line switch -x[ml] or -j[son]
      *
      * Task list:
-     * -
-       TODO: Need to show:
+     * - Add versioning ie YY.MM.dd.gitCommit
+     * 
+       TODO: Need to serialize:
            element suppression formulas (and other formulas for elements)
            sub-textbox formatting (ie font changes, coloring, tab settings, etc)
            "Lock Position"
@@ -63,7 +66,9 @@ namespace CRDiff
                         // Assumption is that the diff tool calls with the report file to convert
                         // and a temp filepath which it will clean up when done.
                         if (Path.GetExtension(args[0]) == ".rpt"
-                            && File.Exists(args[0]))
+                            && File.Exists(args[0])
+                            && Path.GetExtension(args[1]) != ".rpt"
+                            )
                         {
                             //Console.WriteLine($"Creating \"{args[1]}\" from \"{args[0]}\"");
                             SerializeToFile(args[0], args[1]);
@@ -86,7 +91,9 @@ namespace CRDiff
                             textFile2;
                         bool
                             file1IsRpt = false,
-                            file2IsRpt = false;
+                            file2IsRpt = false,
+                            textFile1Exists = false,
+                            textFile2Exists = false;
 
                         if (!File.Exists(textDiffTool)
                             || !File.Exists(rptFile1)
@@ -102,7 +109,9 @@ namespace CRDiff
                             if (Path.GetExtension(rptFile1) == ".rpt")
                             {
                                 file1IsRpt = true;
-                                textFile1 = SerializeToFile(rptFile1, reportOrder: 1);
+                                textFile1 = Path.ChangeExtension(rptFile1, "json");
+                                textFile1Exists = File.Exists(textFile1);
+                                textFile1 = SerializeToFile(rptFile1, textFile1, reportOrder: 1);
                             }
                             else
                             {
@@ -112,7 +121,9 @@ namespace CRDiff
                             if (Path.GetExtension(rptFile2) == ".rpt")
                             {
                                 file2IsRpt = true;
-                                textFile2 = SerializeToFile(rptFile2, reportOrder: 2);
+                                textFile2 = Path.ChangeExtension(rptFile2, "json");
+                                textFile2Exists = File.Exists(textFile2);
+                                textFile2 = SerializeToFile(rptFile2, textFile2, reportOrder: 2);
                             }
                             else
                             {
@@ -129,11 +140,11 @@ namespace CRDiff
 
                             diffProc.WaitForExit();
 
-                            // Clean up (delete) temp files after text diff tool is finished with them
-                            if (file1IsRpt)
+                            // Clean up (delete) temp files after text diff tool is finished with them (if they didn't exist already)
+                            if (file1IsRpt && !textFile1Exists)
                                 File.Delete(textFile1);
 
-                            if (file2IsRpt)
+                            if (file2IsRpt && !textFile2Exists)
                                 File.Delete(textFile2);
                         }
                         catch (Exception ex)
@@ -155,9 +166,27 @@ namespace CRDiff
         private static void Usage(string[] args = null)
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("CRDiff PathToReport (Create a serialized .json file of the report)");
-            Console.WriteLine("CRDiff PathToReport TargetFilename (Use CRDiff as a converter in many text diff tools)");
-            Console.WriteLine("CRDiff PathToTextDiffApp PathToReport1 PathToReport2 (Configure SC Diff Viewer for .rpt files)");
+            Console.WriteLine("CRDiff ReportFilename");
+            Console.WriteLine("     - Creates a serialized .json file of the report");
+            Console.WriteLine("CRDiff ReportFilename TempFilename");
+            Console.WriteLine("     - Writes json to TempFileName. Allows use as a .rpt converter in many text diff tools");
+            Console.WriteLine("CRDiff DiffAppPath ReportFilename1 ReportFilename2");
+            Console.WriteLine("     - Serializes 2 reports and passes serialized .json files to DiffApp for comparison");
+            Console.WriteLine();
+            Console.WriteLine("CRDiff Version:");
+            Console.WriteLine($"Path: {Environment.GetCommandLineArgs()[0]}");
+            Console.WriteLine($"Directory: {AppDomain.CurrentDomain.BaseDirectory}");
+            Console.WriteLine();
+
+            try
+            {
+                var version = (new CRSerialize()).CRVersion();
+                Console.WriteLine($"CR Version: {version}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"CR library is not available ({e.Message})");
+            }
         }
 
         private static void Instructions()
@@ -173,21 +202,21 @@ namespace CRDiff
             Console.ReadKey();
         }
 
-        private static string SerializeToFile(string rptPath, string textPath = null, int reportOrder = 1)
+        private static string SerializeToFile(string rptFile, string textFile = null, int reportOrder = 1)
         {
 
             var serializer = new CRSerialize();
 
-            textPath = textPath ?? Path.ChangeExtension(rptPath, "json");
-            var file = File.CreateText(textPath);
-            Console.WriteLine($"Loading {rptPath}");
+            textFile = textFile ?? Path.ChangeExtension(rptFile, "json");
+            var file = File.CreateText(textFile);
+            Console.WriteLine($"Loading {rptFile}");
 
-            Console.WriteLine($"Saving {textPath}");
-            var serialized = serializer.Serialize(rptPath, textPath, reportOrder);
+            Console.WriteLine($"Saving {textFile}");
+            var serialized = serializer.Serialize(rptFile, textFile, reportOrder);
             file.Write(serialized);
             file.Flush();
             file.Close();
-            return textPath;
+            return textFile;
         }
 
     }

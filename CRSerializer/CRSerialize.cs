@@ -4,23 +4,16 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Reflection;
 
 namespace CRSerializer
 {
     public class CRSerialize
     {
-        public string Serialize(string rptPath, string filepath, int reportOrder = 1)
+        public string Serialize(string rptPath, string filepath, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
         {
             var rpt = new ReportDocument();
             rpt.Load(rptPath);
-            var serialization = Serialize(rpt, filepath, reportOrder);
-            rpt.Close();
-            return serialization;
-
-        }
-
-        public string Serialize(ReportDocument rpt, string filepath, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
-        {
             var rptClient = rpt.ReportClientDocument;
 
             var jsonSerializerSettings = new JsonSerializerSettings
@@ -89,9 +82,31 @@ namespace CRSerializer
                 }
 
                 jw.WriteEndObject(); // final end
+                rpt.Close();
 
                 return sb.ToString();
             }
+        }
+
+        public string CRVersion()
+        {
+            // ref: https://apps.support.sap.com/sap/support/knowledge/public/en/2003551
+            var versions = new StringBuilder();
+            var rpt = new ReportDocument(); // pull in Crystal library
+
+            foreach (var crAsm in AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => a.FullName.StartsWith("CrystalDecisions.CrystalReports.Engine")))
+            {
+                var fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(crAsm.Location);
+                versions.Append(fileVersionInfo.FileVersion);
+                //versions.Append("\n");
+                //versions.Append(fileVersionInfo.FileName);
+            }
+            if (versions.Length == 0)
+            {
+                versions.Append("Not Found");
+            }
+            return versions.ToString();
         }
     }
 }
