@@ -2,15 +2,14 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Text;
 using System.Linq;
-using System.Reflection;
+using System.Text;
 
 namespace CRSerializer
 {
     public class CRSerialize
     {
-        public string Serialize(string rptPath, string filepath, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
+        public string Serialize(string rptPath, string filepath = null, int reportOrder = 1)//, OutputFormat fmt = OutputFormat.json)
         {
             var rpt = new ReportDocument();
             rpt.Load(rptPath);
@@ -51,7 +50,6 @@ namespace CRSerializer
                 jw.WriteObjectHierarchy(rpt.ReportDefinition);
                 //jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition.ReportObjects, jsonSerializerSettings));
 
-
                 jw.WritePropertyName("Subreports");
                 var subReports = rpt.Subreports;
                 if (subReports.Count > 0)
@@ -73,10 +71,10 @@ namespace CRSerializer
 
                         jw.WritePropertyName("DataDefinition");
                         jw.WriteObjectHierarchy(subReport.DataDefinition);
-                        
+
                         jw.WritePropertyName("ReportDefinition");
                         jw.WriteObjectHierarchy(subReport.ReportDefinition);
-                        
+
                         jw.WriteEndObject();
                     }
                 }

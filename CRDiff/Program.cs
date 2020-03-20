@@ -1,9 +1,8 @@
 ﻿using CRSerializer;
-//using CrystalDecisions.CrystalReports.Engine;
 using System;
-//using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace CRDiff
 {
@@ -26,7 +25,7 @@ namespace CRDiff
      *
      * Task list:
      * - Add versioning ie YY.MM.dd.gitCommit
-     * 
+     *
        TODO: Need to serialize:
            element suppression formulas (and other formulas for elements)
            sub-textbox formatting (ie font changes, coloring, tab settings, etc)
@@ -52,6 +51,7 @@ namespace CRDiff
                         if (Path.GetExtension(args[0]) == ".rpt")
                         {
                             SerializeToFile(args[0]);
+                            //SerializeToStdOut(args[0]);
                         }
                         else
                         {
@@ -173,7 +173,7 @@ namespace CRDiff
             Console.WriteLine("CRDiff DiffAppPath ReportFilename1 ReportFilename2");
             Console.WriteLine("     - Serializes 2 reports and passes serialized .json files to DiffApp for comparison");
             Console.WriteLine();
-            Console.WriteLine("CRDiff Version:");
+            Console.WriteLine($"CRDiff Version: {CRDiffVersion()}");
             Console.WriteLine($"Path: {Environment.GetCommandLineArgs()[0]}");
             Console.WriteLine($"Directory: {AppDomain.CurrentDomain.BaseDirectory}");
             Console.WriteLine();
@@ -204,7 +204,6 @@ namespace CRDiff
 
         private static string SerializeToFile(string rptFile, string textFile = null, int reportOrder = 1)
         {
-
             var serializer = new CRSerialize();
 
             textFile = textFile ?? Path.ChangeExtension(rptFile, "json");
@@ -219,5 +218,21 @@ namespace CRDiff
             return textFile;
         }
 
+        private static void SerializeToStdOut(string rptFile)
+        {
+            var serializer = new CRSerialize();
+            Console.Write(serializer.Serialize(rptFile));
+        }
+
+        private static string CRDiffVersion()
+        {
+            return FileVersionInfo
+                .GetVersionInfo(
+                    Assembly
+                    .GetExecutingAssembly()
+                    .Location
+                    )
+                .ProductVersion;
+        }
     }
 }

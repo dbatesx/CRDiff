@@ -1,14 +1,10 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CRSerializer
 {
-    static class Extensions
+    internal static class Extensions
     {
         public static void WriteObjectHierarchy(this JsonWriter jw, object obj)
         {
@@ -72,6 +68,5 @@ namespace CRSerializer
             }
             return paramtrs;
         }
-
     }
 }
