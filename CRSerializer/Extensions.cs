@@ -1,4 +1,5 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
+//using CrystalDecisions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -58,6 +59,27 @@ namespace CRSerializer
             jw.WriteEnd();
         }
 
+        public static void WriteParameters(this JsonWriter jw, ReportDocument rpt)
+        {
+            //var parameterList = new List<string>();
+            var parameterFields = rpt.DataDefinition.ParameterFields;
+            //jw.WritePropertyName("Parameters");
+            jw.WriteStartArray();
+            foreach (ParameterFieldDefinition parameterField in parameterFields)
+            {
+                jw.WriteStartObject();
+                jw.WritePropertyName("Name");
+                jw.WriteValue(parameterField.Name);
+                jw.WritePropertyName("FormulaName");
+                jw.WriteValue(parameterField.FormulaName);
+                jw.WritePropertyName("ValueType");
+                jw.WriteValue(parameterField.ValueType.ToString());
+                jw.WritePropertyName("EnableNullValue");
+                jw.WriteValue(parameterField.EnableNullValue.ToString());
+                jw.WriteEndObject();
+            }
+            jw.WriteEnd();
+        }
         private static List<string> Parameters(ReportDocument rpt)
         {
             var paramtrs = new List<string>();

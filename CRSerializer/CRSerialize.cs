@@ -1,8 +1,10 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace CRSerializer
@@ -34,8 +36,14 @@ namespace CRSerializer
 
                 jw.WriteStartObject();
 
+                jw.WritePropertyName("SerializeVersion");
+                jw.WriteValue(CRSerializeProductVersion());
+
                 jw.WritePropertyName("ReportName");
                 jw.WriteValue(rptName);
+
+                jw.WritePropertyName("Parameters");
+                jw.WriteParameters(rpt);
 
                 jw.WritePropertyName("DataSource");
                 jw.WriteDataSource(rptClient.Database.Tables);
@@ -48,7 +56,6 @@ namespace CRSerializer
 
                 jw.WritePropertyName("ReportDefinition");
                 jw.WriteObjectHierarchy(rpt.ReportDefinition);
-                //jw.WriteRawValue(JsonConvert.SerializeObject(rpt.ReportDefinition.ReportObjects, jsonSerializerSettings));
 
                 jw.WritePropertyName("Subreports");
                 var subReports = rpt.Subreports;
@@ -62,6 +69,9 @@ namespace CRSerializer
                         jw.WriteStartObject();
                         jw.WritePropertyName("SubreportName");
                         jw.WriteValue(subReport.Name);
+
+                        jw.WritePropertyName("Parameters");
+                        jw.WriteParameters(subReport);
 
                         jw.WritePropertyName("DataSource");
                         jw.WriteDataSource(subReportClient.DataDefController.Database.Tables);
@@ -84,6 +94,16 @@ namespace CRSerializer
 
                 return sb.ToString();
             }
+        }
+        public static string CRSerializeProductVersion()
+        {
+            return FileVersionInfo
+                .GetVersionInfo(
+                    Assembly
+                    .GetExecutingAssembly()
+                    .Location
+                    )
+                .ProductVersion;
         }
 
         public string CRVersion()
