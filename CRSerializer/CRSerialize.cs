@@ -24,7 +24,7 @@ namespace CRSerializer
             };
 
             string rptName = string.IsNullOrEmpty(rpt.Name)
-                ? Path.GetFileNameWithoutExtension(filepath)
+                ? Path.GetFileNameWithoutExtension(rptPath)
                 : rpt.Name;
 
             var sb = new StringBuilder();
@@ -36,6 +36,9 @@ namespace CRSerializer
 
                 jw.WriteStartObject();
 
+                jw.WritePropertyName("Entire Report Object");
+                jw.WriteObjectHierarchy(rpt);
+
                 jw.WritePropertyName("SerializeVersion");
                 jw.WriteValue(CRSerializeProductVersion());
 
@@ -45,15 +48,36 @@ namespace CRSerializer
                 jw.WritePropertyName("Parameters");
                 jw.WriteParameters(rpt);
 
+                jw.WritePropertyName("SummaryInfo");
+                jw.WriteObjectHierarchy(rpt.SummaryInfo);
+
+                // experimental properties:
+                jw.WritePropertyName("DataSourceConnections");
+                jw.WriteObjectHierarchy(rpt.DataSourceConnections);
+
+                jw.WritePropertyName("ParameterFields");
+                jw.WriteObjectHierarchy(rpt.ParameterFields);
+
+
+                jw.WritePropertyName("ReportOptions");
+                jw.WriteObjectHierarchy(rptClient.ReportOptions);
+
                 jw.WritePropertyName("DataSource");
                 jw.WriteDataSource(rptClient.Database.Tables);
 
                 jw.WritePropertyName("DatabaseTables");
-                jw.WriteObjectHierarchy(rptClient.Database.Tables);
+                jw.WriteObjectHierarchy(rpt.Database.Tables);
+                //jw.WriteObjectHierarchy(rptClient.Database.Tables);
 
                 jw.WritePropertyName("DataDefinition");
                 jw.WriteObjectHierarchy(rpt.DataDefinition);
 
+                jw.WritePropertyName("PrintOptions");
+                jw.WriteObjectHierarchy(rpt.PrintOptions);
+
+                jw.WritePropertyName("CustomFunctions");
+                jw.WriteObjectHierarchy(rptClient.CustomFunctionController.GetCustomFunctions());
+                
                 jw.WritePropertyName("ReportDefinition");
                 jw.WriteObjectHierarchy(rpt.ReportDefinition);
 
@@ -81,6 +105,9 @@ namespace CRSerializer
 
                         jw.WritePropertyName("DataDefinition");
                         jw.WriteObjectHierarchy(subReport.DataDefinition);
+
+                        jw.WritePropertyName("CustomFunctions");
+                        jw.WriteObjectHierarchy(rptClient.CustomFunctionController.GetCustomFunctions());
 
                         jw.WritePropertyName("ReportDefinition");
                         jw.WriteObjectHierarchy(subReport.ReportDefinition);
@@ -126,5 +153,7 @@ namespace CRSerializer
             }
             return versions.ToString();
         }
+
+
     }
 }
