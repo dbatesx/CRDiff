@@ -36,50 +36,34 @@ namespace CRSerializer
 
                 jw.WriteStartObject();
 
-                jw.WritePropertyName("Entire Report Object");
-                jw.WriteObjectHierarchy(rpt);
+                jw.WriteObjectHierarchy("Entire Report Object", rpt);
 
-                jw.WritePropertyName("SerializeVersion");
-                jw.WriteValue(CRSerializeProductVersion());
+                jw.WriteProperty("SerializeVersion", CRSerializeProductVersion());
+                
+                jw.WriteProperty("ReportName", rptName);
 
-                jw.WritePropertyName("ReportName");
-                jw.WriteValue(rptName);
+                jw.WriteParameters("Parameters", rpt);
 
-                jw.WritePropertyName("Parameters");
-                jw.WriteParameters(rpt);
-
-                jw.WritePropertyName("SummaryInfo");
-                jw.WriteObjectHierarchy(rpt.SummaryInfo);
+                jw.WriteObjectHierarchy("SummaryInfo", rpt.SummaryInfo);
 
                 // experimental properties:
-                jw.WritePropertyName("DataSourceConnections");
-                jw.WriteObjectHierarchy(rpt.DataSourceConnections);
+                jw.WriteObjectHierarchy("DataSourceConnections", rpt.DataSourceConnections);
 
-                jw.WritePropertyName("ParameterFields");
-                jw.WriteObjectHierarchy(rpt.ParameterFields);
+                jw.WriteObjectHierarchy("ParameterFields", rpt.ParameterFields);
 
+                jw.WriteObjectHierarchy("ReportOptions", rptClient.ReportOptions);
 
-                jw.WritePropertyName("ReportOptions");
-                jw.WriteObjectHierarchy(rptClient.ReportOptions);
+                jw.WriteDataSource("DataSource", rptClient.Database.Tables);
 
-                jw.WritePropertyName("DataSource");
-                jw.WriteDataSource(rptClient.Database.Tables);
+                jw.WriteObjectHierarchy("DatabaseTables", rpt.Database.Tables);
 
-                jw.WritePropertyName("DatabaseTables");
-                jw.WriteObjectHierarchy(rpt.Database.Tables);
-                //jw.WriteObjectHierarchy(rptClient.Database.Tables);
+                jw.WriteObjectHierarchy("DataDefinition", rpt.DataDefinition);
 
-                jw.WritePropertyName("DataDefinition");
-                jw.WriteObjectHierarchy(rpt.DataDefinition);
+                jw.WritePrintOptions(rpt.PrintOptions);
 
-                jw.WritePropertyName("PrintOptions");
-                jw.WriteObjectHierarchy(rpt.PrintOptions);
-
-                jw.WritePropertyName("CustomFunctions");
-                jw.WriteObjectHierarchy(rptClient.CustomFunctionController.GetCustomFunctions());
+                jw.WriteObjectHierarchy("CustomFunctions", rptClient.CustomFunctionController.GetCustomFunctions());
                 
-                jw.WritePropertyName("ReportDefinition");
-                jw.WriteObjectHierarchy(rpt.ReportDefinition);
+                jw.WriteObjectHierarchy("ReportDefinition", rpt.ReportDefinition);
 
                 jw.WritePropertyName("Subreports");
                 var subReports = rpt.Subreports;
@@ -91,26 +75,19 @@ namespace CRSerializer
                         var subReportClient = rptClient.SubreportController.GetSubreport(subReport.Name);
 
                         jw.WriteStartObject();
-                        jw.WritePropertyName("SubreportName");
-                        jw.WriteValue(subReport.Name);
+                        jw.WriteProperty("SubreportName", subReport.Name);
 
-                        jw.WritePropertyName("Parameters");
-                        jw.WriteParameters(subReport);
+                        jw.WriteParameters("Parameters", subReport);
 
-                        jw.WritePropertyName("DataSource");
-                        jw.WriteDataSource(subReportClient.DataDefController.Database.Tables);
+                        jw.WriteDataSource("DataSource", subReportClient.DataDefController.Database.Tables);
 
-                        jw.WritePropertyName("DatabaseTables");
-                        jw.WriteObjectHierarchy(subReport.Database.Tables);
+                        jw.WriteObjectHierarchy("DatabaseTables", subReport.Database.Tables);
 
-                        jw.WritePropertyName("DataDefinition");
-                        jw.WriteObjectHierarchy(subReport.DataDefinition);
+                        jw.WriteObjectHierarchy("DataDefinition", subReport.DataDefinition);
 
-                        jw.WritePropertyName("CustomFunctions");
-                        jw.WriteObjectHierarchy(rptClient.CustomFunctionController.GetCustomFunctions());
+                        jw.WriteObjectHierarchy("CustomFunctions", rptClient.CustomFunctionController.GetCustomFunctions());
 
-                        jw.WritePropertyName("ReportDefinition");
-                        jw.WriteObjectHierarchy(subReport.ReportDefinition);
+                        jw.WriteObjectHierarchy("ReportDefinition", subReport.ReportDefinition);
 
                         jw.WriteEndObject();
                     }

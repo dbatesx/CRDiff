@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace CRDiff
 {
@@ -33,8 +34,10 @@ namespace CRDiff
            sub-textbox formatting (ie font changes, coloring, tab settings, etc)
            "Lock Position"
            "change number sign"
-           Page Setup (ie Printer, margins)
            "Keep Data" setting
+
+        Done:
+           Page Setup (ie Printer, margins)
 
      * Testing arguments:
      * "C:\Program Files (x86)\Compare It!\wincmp3.exe" "C:\dev\svn\Reports\Crystal Reports\trunk\KinderMorgan_CS_MT_Testing.rpt" "C:\dev\svn\Reports\Crystal Reports\trunk\KinderMorgan_CS_MT.rpt"
@@ -54,12 +57,27 @@ namespace CRDiff
                         {
                             SerializeToFile(args[0]);
                             //SerializeToStdOut(args[0]);
+                            return;
                         }
-                        else
+
+                        var pathExt = new List<string>(System.Environment.GetEnvironmentVariable("PATHEXT").Split(';'));
+                        if (pathExt.Contains(Path.GetExtension(args[0]).ToUpper()))
                         {
-                            Console.WriteLine(string.Join(" ", args));
-                            Console.WriteLine("Not a report file");
+                            //assume it's an executable that can compare files
+                            if (ValidateFile(args[0]))
+                            {
+                                SetTextDiffTool(args[0]);
+                            }
+                            return;
+                        }
+
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(args[0]);
+                            Console.WriteLine("doesn't appear to be a report or executable file");
+                            Console.ResetColor();
                             Usage();
+                            ReadKey();
                         }
                         break;
                     }
@@ -103,11 +121,8 @@ namespace CRDiff
                     }
                 case 3:
                     {
-                        if(CompareFiles(args[0], args[1], args[2])
-                            && args[0] != GetTextDiffTool())
-                        {
-                            SetTextDiffTool(args[0]);
-                        }
+                        // Allows use of an alternate text diff tool without updating config
+                        CompareFiles(args[0], args[1], args[2]);
 
                         break;
                     }
@@ -198,6 +213,12 @@ namespace CRDiff
             }
         }
 
+        /// <summary>
+        /// Checks if file exists
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="ifEmpty"></param>
+        /// <returns>true if file exists</returns>
         private static bool ValidateFile(string filePath, string ifEmpty = "A file")
         {
             //TODO: If file is an executable, search path environment
@@ -219,6 +240,10 @@ namespace CRDiff
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
         private static void Usage(string[] args = null)
         {
             Console.WriteLine("Usage:");
